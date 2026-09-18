@@ -10,6 +10,19 @@ const grant = (tools: string[]) => ({ tools, extensions: Object.fromEntries(tool
 const documentation = { documentation: grant(["fetch_content"]) };
 const both = { ...documentation, "open-web": grant(["web_search", "source_check", "fetch_content", "get_search_content"]) };
 const agent: AgentDefinition = { name: "sdd-research", description: "Research", filePath: "/agents/sdd-research.md", scope: "global", tools: ["read", "write", "fetch_content", "web_search", "source_check", "get_search_content"], instructions: "Research", model: undefined, thinking: undefined, mode: undefined };
+const genericAgent: AgentDefinition = { ...agent, name: "gentle-ai-research", filePath: "/agents/gentle-ai-research.md", tools: ["read", "grep", "find", "fetch_content", "web_search", "source_check", "get_search_content"] };
+
+test("generic research preserves fixed local reads and narrows external tools by provenance", () => {
+ const result = researchAgent(genericAgent, inventory(genericAgent.tools), documentation);
+ assert.deepEqual(result.agent.tools, ["read", "grep", "find", "fetch_content"]);
+ assert.deepEqual(result.extensionPaths, ["/installed/web.ts"]);
+ assert.deepEqual(researchAgent(genericAgent, inventory(genericAgent.tools)).agent.tools, ["read", "grep", "find"]);
+ assert.deepEqual(
+  researchAgent({ ...genericAgent, tools: [...genericAgent.tools, "bash", "write", "mcp", "mem_save", "subagent_run"] }, inventory([...genericAgent.tools, "bash", "write", "mcp", "mem_save", "subagent_run"]), both).agent.tools,
+  ["read", "grep", "find", "fetch_content", "web_search", "source_check", "get_search_content"],
+ );
+ assert.deepEqual(researchAgent(agent, inventory(agent.tools), documentation).agent.tools, ["fetch_content"], "SDD research remains output-only");
+});
 
 test("approved active external tools reach the actual child CLI allowlist", () => {
  const pi = inventory(["read", "write", "fetch_content", "web_search", "source_check", "get_search_content", "bash", "mcp"]);

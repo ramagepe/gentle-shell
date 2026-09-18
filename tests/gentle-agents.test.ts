@@ -1271,6 +1271,44 @@ test("research launch transports selected grants and only matching existing exte
 	await fake.fire("session_shutdown", ctx);
 });
 
+test("generic research launch keeps fixed local reads and requires fresh external selection", async () => {
+	const fixtureHome = join(root, "generic-research-home");
+	mkdirSync(join(fixtureHome, ".pi", "agent", "agents"), { recursive: true });
+	writeFileSync(join(fixtureHome, ".pi", "agent", "agents", "gentle-ai-research.md"), "---\nname: gentle-ai-research\ntools: [read, grep, find, fetch_content, web_search, source_check, get_search_content]\n---\nCollect bounded evidence.");
+	const fake = fakePi(), runtime = deps(), { ctx } = fakeContext();
+	fake.pi.getActiveTools = () => ["read", "grep", "find", "fetch_content", "web_search", "source_check", "get_search_content", "bash", "mcp"];
+	fake.pi.getAllTools = () => fake.pi.getActiveTools().map(name => ({ name, sourceInfo: ["read", "grep", "find"].includes(name) ? { source: "sdk" } : { source: "extension", path: "/installed/web.ts" } })) as never;
+	const selection = { documentation: { tools: ["fetch_content"], extensions: { fetch_content: "/installed/web.ts" } } };
+	let childEnv: NodeJS.ProcessEnv = {};
+	gentleAgents(fake.pi, {}, { ...runtime.deps, home: fixtureHome, spawn: (command, args, options) => {
+		childEnv = options.env!;
+		return runtime.deps.spawn!(command, args, options);
+	} });
+	const result = await fake.tools.get("subagent_run")!.execute("generic-research", { agent: "gentle-ai-research", task: "Research docs", mode: "background", research_selection: selection }, undefined, undefined, ctx);
+	await tick();
+	assert.equal(runtime.spawned[0][runtime.spawned[0].indexOf("--tools") + 1], "read,grep,find,fetch_content,subagent_parent_message");
+	assert.equal(childEnv.GENTLE_PI_RESEARCH_AGENT, "gentle-ai-research");
+	runtime.children[0].emit({ type: "agent_settled" });
+	await tick();
+	const taskId = (result.details.gentleAgents as { taskId: string }).taskId;
+	await fake.tools.get("subagent_continue")!.execute("generic-resume", { task_id: taskId, prompt: "Continue locally", mode: "background" }, undefined, undefined, ctx);
+	await tick();
+	assert.equal(runtime.spawned[1][runtime.spawned[1].indexOf("--tools") + 1], "read,grep,find,subagent_parent_message");
+	assert.ok(!runtime.spawned[1].includes("--extension"), "external grants are never inherited");
+	await fake.fire("session_shutdown", ctx);
+});
+
+test("generic research child permits only fixed local reads without provenance", () => {
+	const hooks = new Map<string, (event: any) => any>();
+	const active = ["read", "grep", "find", "fetch_content", "write", "bash", "mcp"];
+	const pi = { on: (name: string, handler: (event: any) => any) => hooks.set(name, handler), getActiveTools: () => active, getAllTools: () => active.map(name => ({ name, sourceInfo: ["read", "grep", "find", "write"].includes(name) ? { source: "sdk" } : { source: "extension", path: "/installed/web.ts" } })) } as never;
+	gentleAgents(pi, { GENTLE_PI_AGENTS_CHILD: "1", GENTLE_PI_RESEARCH_AGENT: "gentle-ai-research", GENTLE_PI_RESEARCH_TOOLS: JSON.stringify(["read", "grep", "find", "fetch_content", "subagent_parent_message"]), GENTLE_PI_RESEARCH_SELECTION: JSON.stringify({ documentation: { tools: ["fetch_content"], extensions: { fetch_content: "/installed/web.ts" } } }) });
+	const call = hooks.get("tool_call")!;
+	for (const toolName of ["read", "grep", "find", "fetch_content", "subagent_parent_message"]) assert.equal(call({ toolName })?.block, undefined, toolName);
+	for (const toolName of ["write", "bash", "mcp"]) assert.equal(call({ toolName })?.block, true, toolName);
+	assert.match(hooks.get("before_agent_start")!({ systemPrompt: "research" }).systemPrompt, /read local repository evidence/);
+});
+
 test("research registered continuation needs no prior artifact identity", async () => {
 	const h = fakePi(), runtime = deps(), { ctx } = fakeContext();
 	const home = join(root, "optional-research-home");

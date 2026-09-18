@@ -1055,6 +1055,13 @@ async function run() {
 			{ name: "gentle-ai-explore", tools: ["read", "grep", "find", "codegraph"] },
 			"isolated package installation must activate only the explorer inspection tools",
 		);
+		const installedResearchPath = join(globalAgentHome, "agents", "gentle-ai-research.md");
+		assert.equal(existsSync(installedResearchPath), true);
+		assert.deepEqual(
+			readAgentDefinition(await readFile(installedResearchPath, "utf8")),
+			{ name: "gentle-ai-research", tools: ["read", "grep", "find", "fetch_content", "web_search", "source_check", "get_search_content"] },
+			"generic research must expose only fixed local reads and approved web evidence tools",
+		);
 		const installedRiskSource = await readFile(
 			join(globalAgentHome, "agents", "review-risk.md"),
 			"utf8",

@@ -31,7 +31,7 @@ test("organic entry stays read-only without authorization and loads detail befor
 	assert.doesNotMatch(core + delegation, /Suggest it when proposal\/spec\/design\/tasks|propose SDD only when durable proposal\/spec\/design\/tasks/);
 });
 
-test("research uses adaptive evidence gathering and existing general workers only", () => {
+test("generic external research routes to the dedicated non-SDD research agent", () => {
 	containsAll(delegation, [
 		"problem, intended outcome, constraints, and current evidence",
 		"no fixed questionnaire or mandatory rounds",
@@ -44,8 +44,9 @@ test("research uses adaptive evidence gathering and existing general workers onl
 		"verified facts, assumptions, contradictions, freshness, and gaps",
 		"recommendation, tradeoffs, open questions, and implementation implications",
 		"Forward these research instructions",
-		"existing fresh general exploration/research worker",
-		"do not create a specialized agent or invoke `sdd-research`",
+		"`gentle-ai-research`",
+		"generic non-SDD",
+		"`sdd-research` remains SDD-only",
 		"no new persistence or readiness machinery",
 	]);
 });

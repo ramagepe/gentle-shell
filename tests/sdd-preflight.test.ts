@@ -203,7 +203,7 @@ test("cross-process owner installations preserve both managed manifest entries",
 		const assets = (JSON.parse(readFileSync(join(agentHome, "gentle-ai", "managed-assets.json"), "utf8")) as { assets: Record<string, string> }).assets;
 		assert.deepEqual(
 			Object.keys(assets).filter((key) => key.startsWith("agents/gentle-ai-")).sort(),
-			["agents/gentle-ai-explore.md", "agents/gentle-ai-verify.md", "agents/gentle-ai-worker.md"],
+			["agents/gentle-ai-explore.md", "agents/gentle-ai-research.md", "agents/gentle-ai-verify.md", "agents/gentle-ai-worker.md"],
 		);
 		assert.deepEqual(
 			Object.keys(assets).filter((key) => key === "chains/4r-review.chain.md" || key.startsWith("agents/jd-") || key.startsWith("agents/review-")).sort(),

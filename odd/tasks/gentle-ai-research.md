@@ -17,7 +17,7 @@ Add a package-owned global `gentle-ai-research` agent for generic non-SDD extern
 
 - [x] T1. Add RED contract tests for asset installation, exact tool allowlists, generic research selection/guards, continuation behavior, and ODD routing. Commit: `1d5b0bbd`.
 - [x] T2. Implement the delegation-owned agent asset and runtime capability enforcement; make focused runtime tests GREEN. Commit: `2520db3c`.
-- [x] T3. Update ODD routing and public documentation, run focused and full verification, and record residual risks.
+- [x] T3. Update ODD routing and public documentation, run focused and full verification, and record residual risks. Commit: `d6fb6233`.
 
 ## Progress and evidence
 

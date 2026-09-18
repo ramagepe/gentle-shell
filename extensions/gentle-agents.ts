@@ -33,7 +33,7 @@ import { CARD_TONE, renderCard } from "../lib/shell-card.ts";
 import { openInExternalEditor } from "./gentle-shell.ts";
 import { resolveGentlePiAgentHome, gentlePiConfigHome } from "../lib/agent-home.ts";
 import { resolveProfilePin } from "../lib/agent-profile-pin.ts";
-import { canonicalArtifactPath, researchAgent, renderResearchCapabilities, RESEARCH_CHILD_TOOLS_ENV, RESEARCH_SELECTION_ENV } from "../lib/sdd-research-capabilities.ts";
+import { canonicalArtifactPath, GENERIC_RESEARCH_AGENT, GENERIC_RESEARCH_LOCAL_TOOLS, researchAgent, renderResearchCapabilities, RESEARCH_AGENT_ENV, RESEARCH_CHILD_TOOLS_ENV, RESEARCH_SELECTION_ENV } from "../lib/sdd-research-capabilities.ts";
 import { CHILD_METRICS_EVENT, CHILD_METRICS_REVOKED, childEvent, launchSelection, type LaunchSelection } from "../lib/runtime-metrics-children.ts";
 import { runtimeMetricsEnvAllows, type RuntimeMetricsPolicyDeps } from "../lib/runtime-metrics-policy.ts";
 
@@ -393,7 +393,7 @@ export async function answerThroughUi(ui: ExtensionContext["ui"] | undefined, as
 const RESEARCH_SELECTION_SCHEMA = {
 	type: "object",
 	additionalProperties: false,
-	description: "Untrusted narrowing intent for sdd-research; exact tools and existing sourceInfo.path per tool. Never grants permissions or installs extensions.",
+	description: "Untrusted narrowing intent for package research agents; exact tools and existing sourceInfo.path per tool. Never grants permissions or installs extensions.",
 	properties: Object.fromEntries(["documentation", "open-web"].map(kind => [kind, {
 		type: "object", additionalProperties: false, required: ["tools", "extensions"],
 		properties: {
@@ -412,15 +412,20 @@ export default function gentleAgents(pi: ExtensionAPI, env: NodeJS.ProcessEnv = 
 		} catch { /* Invalid launch restrictions deny every tool. */ }
 		let selection: unknown;
 		try { selection = JSON.parse(env[RESEARCH_SELECTION_ENV] ?? "null"); } catch { /* Missing selection grants no research. */ }
-		const current = () => researchAgent({ tools: allowed, instructions: "" } as AgentDefinition, pi, selection);
+		const researchName = env[RESEARCH_AGENT_ENV] === GENERIC_RESEARCH_AGENT ? GENERIC_RESEARCH_AGENT : "sdd-research";
+		const current = () => researchAgent({ name: researchName, tools: allowed, instructions: "" } as AgentDefinition, pi, selection);
+		const generic = researchName === GENERIC_RESEARCH_AGENT;
 		pi.on("before_agent_start", event => ({
-			systemPrompt: `${event.systemPrompt}\n\n${renderResearchCapabilities(current().capabilities)}\n\nResearch is output-only. Use parent-supplied local context; do not read or mutate repository or Engram artifacts. Return useful partial findings and unavailable sources honestly. The parent owns authorized persistence and actual readback.`,
+			systemPrompt: `${event.systemPrompt}\n\n${renderResearchCapabilities(current().capabilities)}\n\n${generic
+				? "Research is read-only. You may read local repository evidence with read, grep, and find, but never mutate repository or Engram artifacts."
+				: "Research is output-only. Use parent-supplied local context; do not read or mutate repository or Engram artifacts."} Return useful partial findings and unavailable sources honestly. The parent owns authorized persistence and actual readback.`,
 		}));
 		pi.on("tool_call", event => {
-			const registered = pi.getAllTools().some(tool => tool.name === event.toolName && tool.sourceInfo?.source !== "sdk");
+			const localRead = generic && GENERIC_RESEARCH_LOCAL_TOOLS.includes(event.toolName as typeof GENERIC_RESEARCH_LOCAL_TOOLS[number]);
+			const registeredExternal = pi.getAllTools().some(tool => tool.name === event.toolName && tool.sourceInfo?.source !== "sdk");
 			const selected = current().agent.tools.includes(event.toolName) || event.toolName === "subagent_parent_message";
-			if (!registered || !selected || !allowed.includes(event.toolName) || !pi.getActiveTools().includes(event.toolName)) {
-				return { block: true, reason: "Tool is outside the output-only research child's active launch allowlist." };
+			if ((!localRead && !registeredExternal) || !selected || !allowed.includes(event.toolName) || !pi.getActiveTools().includes(event.toolName)) {
+				return { block: true, reason: "Tool is outside the research child's active launch allowlist." };
 			}
 		});
 	}
@@ -1026,7 +1031,7 @@ export default function gentleAgents(pi: ExtensionAPI, env: NodeJS.ProcessEnv = 
 			})?.modelProfiles,
 		);
 		const profile = resolveAgentProfile(agent, config);
-		const research = agent.name === "sdd-research" ? researchAgent(agent, pi, researchSelection) : undefined;
+		const research = agent.name === "sdd-research" || agent.name === GENERIC_RESEARCH_AGENT ? researchAgent(agent, pi, researchSelection) : undefined;
 		const sessionDir = agentRuntimePaths(deps.home, agentHome).sessions;
 		mkdirSync(sessionDir, { recursive: true });
 		const parentSessionManager = ctx.sessionManager as unknown as ReviewSessionManager;
@@ -1051,7 +1056,7 @@ export default function gentleAgents(pi: ExtensionAPI, env: NodeJS.ProcessEnv = 
 			thinking: profile.thinking,
 			sessionDir,
 			resumeSessionPath: resume,
-			env: research ? { ...deps.env, [RESEARCH_CHILD_TOOLS_ENV]: JSON.stringify([...research.agent.tools, "subagent_parent_message"]) } : deps.env,
+			env: research ? { ...deps.env, [RESEARCH_AGENT_ENV]: agent.name, [RESEARCH_CHILD_TOOLS_ENV]: JSON.stringify([...research.agent.tools, "subagent_parent_message"]) } : deps.env,
 			...(research ? { researchSelection, extensionPaths: research.extensionPaths } : {}),
 			...(launchSddChange === undefined ? {} : { sddChange: launchSddChange }),
 			...(parentRepositoryIdentity === undefined ? {} : {

@@ -15,8 +15,8 @@ Add a package-owned global `gentle-ai-research` agent for generic non-SDD extern
 
 ## Tasks
 
-- [x] T1. Add RED contract tests for asset installation, exact tool allowlists, generic research selection/guards, continuation behavior, and ODD routing.
-- [ ] T2. Implement the delegation-owned agent asset and runtime capability enforcement; make focused runtime tests GREEN.
+- [x] T1. Add RED contract tests for asset installation, exact tool allowlists, generic research selection/guards, continuation behavior, and ODD routing. Commit: `1d5b0bbd`.
+- [x] T2. Implement the delegation-owned agent asset and runtime capability enforcement; make focused runtime tests GREEN.
 - [ ] T3. Update ODD routing and public documentation, run focused and full verification, and record residual risks.
 
 ## Progress and evidence
@@ -26,6 +26,7 @@ Add a package-owned global `gentle-ai-research` agent for generic non-SDD extern
 - Handoff checkpoint: `infra-clean-slate-research/2026-09-18/v13`
 - User authorized implementation, cloning the source repository, dependency installation, and local work-unit commits; push/publication remain unauthorized.
 - T1 RED: `sdd-research-capabilities` fails because generic local reads are stripped; `sdd-preflight` fails because the new asset is absent; `odd-routing-contract` fails because no dedicated route exists; focused `gentle-agents` cases fail because generic launches are not narrowed and SDK local reads are blocked.
+- T2 GREEN: research capabilities 9/9; preflight 33/33; focused launch/child guard cases 5/5; runtime harness passed; package resource check passed (169 files).
 
 ## Acceptance criteria
 

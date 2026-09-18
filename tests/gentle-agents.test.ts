@@ -1300,7 +1300,7 @@ test("generic research launch keeps fixed local reads and requires fresh externa
 
 test("generic research child permits only fixed local reads without provenance", () => {
 	const hooks = new Map<string, (event: any) => any>();
-	const active = ["read", "grep", "find", "fetch_content", "write", "bash", "mcp"];
+	const active = ["read", "grep", "find", "fetch_content", "write", "bash", "mcp", "subagent_parent_message"];
 	const pi = { on: (name: string, handler: (event: any) => any) => hooks.set(name, handler), getActiveTools: () => active, getAllTools: () => active.map(name => ({ name, sourceInfo: ["read", "grep", "find", "write"].includes(name) ? { source: "sdk" } : { source: "extension", path: "/installed/web.ts" } })) } as never;
 	gentleAgents(pi, { GENTLE_PI_AGENTS_CHILD: "1", GENTLE_PI_RESEARCH_AGENT: "gentle-ai-research", GENTLE_PI_RESEARCH_TOOLS: JSON.stringify(["read", "grep", "find", "fetch_content", "subagent_parent_message"]), GENTLE_PI_RESEARCH_SELECTION: JSON.stringify({ documentation: { tools: ["fetch_content"], extensions: { fetch_content: "/installed/web.ts" } } }) });
 	const call = hooks.get("tool_call")!;

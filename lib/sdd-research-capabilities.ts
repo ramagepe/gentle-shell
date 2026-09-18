@@ -6,6 +6,9 @@ import type { AgentDefinition } from "./agents-config.ts";
 // `mcp` and dynamic `mcp__context7` gateways are deliberately NOT grants: an
 // active gateway does not prove which remote methods it can safely expose.
 export const RESEARCH_TOOLS = ["fetch_content", "web_search", "source_check", "get_search_content"] as const;
+export const GENERIC_RESEARCH_AGENT = "gentle-ai-research";
+export const GENERIC_RESEARCH_LOCAL_TOOLS = ["read", "grep", "find"] as const;
+export const RESEARCH_AGENT_ENV = "GENTLE_PI_RESEARCH_AGENT";
 export const RESEARCH_CHILD_TOOLS_ENV = "GENTLE_PI_RESEARCH_TOOLS";
 export const RESEARCH_SELECTION_ENV = "GENTLE_PI_RESEARCH_SELECTION";
 export interface ResearchGrant {
@@ -79,7 +82,10 @@ export function researchAgent(agent: AgentDefinition, pi: Inventory, selection?:
 		for (const name of capability.tools) extensionPaths.add(grant.extensions![name]);
 	}
 	const available = new Set(Object.values(capabilities).filter(value => value.status === "available").flatMap(value => value.tools));
-	const tools = agent.tools.filter(name => available.has(name));
+	const fixedLocal = agent.name === GENERIC_RESEARCH_AGENT
+		? new Set(GENERIC_RESEARCH_LOCAL_TOOLS.filter(name => agent.tools.includes(name)))
+		: new Set<string>();
+	const tools = agent.tools.filter(name => fixedLocal.has(name as typeof GENERIC_RESEARCH_LOCAL_TOOLS[number]) || available.has(name));
 	return { agent: { ...agent, tools, instructions: `${agent.instructions}\n\n${renderResearchCapabilities(capabilities)}` }, capabilities, extensionPaths: [...extensionPaths] };
 }
 

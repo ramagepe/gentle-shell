@@ -35,6 +35,7 @@ test("installed package definitions retain classification after the actual routi
 	for (const entry of readdirSync(new URL("../assets/agents/", import.meta.url)).filter(file => file.endsWith(".md"))) {
 		const file = entry.slice(0, -3);
 		const className = file === "sdd-proposal" ? "sdd-propose"
+			: file === "gentle-ai-research" ? "explore"
 			: file.startsWith("gentle-ai-") ? file.slice("gentle-ai-".length) : file;
 		const kind = parseAgentClass(className);
 		if (file === "sdd-remediate") {

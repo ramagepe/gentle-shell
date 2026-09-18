@@ -108,7 +108,7 @@ Say what you need once, then keep moving. el Gentleman helps turn intent into cl
   <img src="docs/assets/diagrams/agent-orchestration.svg" width="1200" alt="Diagram of one parent session directing bounded map, implementation, and verification work and receiving evidence back">
 </p>
 
-Bring in help without losing the thread. Focused package-owned Pi agents can map a codebase, implement a bounded change, or verify it, while one parent stays accountable for the scope, the decisions, and the final summary.
+Bring in help without losing the thread. Focused package-owned Pi agents can map a codebase, research external evidence, implement a bounded change, or verify it, while one parent stays accountable for the scope, the decisions, and the final summary.
 
 **[→ Learn how work is routed](docs/readme-reference.md#how-the-harness-decides-what-to-do)**
 

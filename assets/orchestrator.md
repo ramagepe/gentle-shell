@@ -40,7 +40,7 @@ Delegation is not optional once complexity appears. If a task crosses the trigge
 Route work through the smallest harness that is safe. Three tiers:
 
 1. **Inline Direct** — small, mechanical, parent has context (typo, one-file edit, read-only check of 1-3 known files, bash for state). No SDD ceremony; stop when it is no longer small.
-2. **Simple Delegation** — generic non-SDD exploration → `gentle-ai-explore`; bounded implementation → `gentle-ai-worker`; command-running generic non-SDD verification → `gentle-ai-verify`. Try its package role; if missing/unusable, use native `Agent` under the same read-only mapping/verification constraints and report fallback. SDD roles stay inside SDD.
+2. **Simple Delegation** — generic non-SDD exploration → `gentle-ai-explore`; research → `gentle-ai-research`; bounded implementation → `gentle-ai-worker`; generic non-SDD verification → `gentle-ai-verify`. If missing/unusable use native `Agent` with the same read-only constraints and report fallback. SDD roles stay inside SDD; `sdd-research` remains SDD-only.
 3. **SDD (optional)** — only by explicit request or accepted proposal, never size, file count, or risk. Resolve organic ambiguity with optional research, not SDD. Selected SDD commands and approval gates: `sdd-orchestrator-workflow.md`.
 
 ODD (Default Workflow, harness section above) is mandatory on every request; detail: `orchestrator-delegation.md`, `orchestrator-memory.md`.

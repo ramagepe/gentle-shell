@@ -567,12 +567,13 @@ test("selective delegation installation owns only generic agents", () => {
 		const result = installPackageAssets(agentHome, false, ["delegation"]);
 		assert.deepEqual(Object.keys(installedAssetManifest(agentHome).assets).sort(), [
 			"agents/gentle-ai-explore.md",
+			"agents/gentle-ai-research.md",
 			"agents/gentle-ai-verify.md",
 			"agents/gentle-ai-worker.md",
 		]);
-		assert.deepEqual(result, { agents: 3, chains: 0, support: 0, skipped: 0 });
+		assert.deepEqual(result, { agents: 4, chains: 0, support: 0, skipped: 0 });
 		assert.deepEqual(readdirSync(join(agentHome, "agents")).sort(), [
-			"gentle-ai-explore.md", "gentle-ai-verify.md", "gentle-ai-worker.md",
+			"gentle-ai-explore.md", "gentle-ai-research.md", "gentle-ai-verify.md", "gentle-ai-worker.md",
 		]);
 		assert.equal(existsSync(join(agentHome, "chains")), false);
 		assert.equal(existsSync(join(agentHome, "gentle-ai", "support")), false);
@@ -608,7 +609,7 @@ test("selective installation retires only assets belonging to the selected owner
 
 const EXPECTED_OWNER_ASSETS: Record<PackageAssetOwner, readonly string[]> = {
 	delegation: [
-		"agents/gentle-ai-explore.md", "agents/gentle-ai-verify.md", "agents/gentle-ai-worker.md",
+		"agents/gentle-ai-explore.md", "agents/gentle-ai-research.md", "agents/gentle-ai-verify.md", "agents/gentle-ai-worker.md",
 	],
 	review: [
 		"agents/jd-fix-agent.md", "agents/jd-judge-a.md", "agents/jd-judge-b.md",
@@ -662,10 +663,10 @@ test("legacy all-assets installation covers every packaged file with explicit ow
 		assert.equal(getPackageAssetOwner(key), undefined, "unknown assets must not default to SDD");
 	}
 	withIsolatedAssetHome((agentHome) => {
-		assert.deepEqual(installSddAssets(agentHome, false), { agents: 23, chains: 4, support: 3, skipped: 0 });
+		assert.deepEqual(installSddAssets(agentHome, false), { agents: 24, chains: 4, support: 3, skipped: 0 });
 		assert.deepEqual(Object.keys(installedAssetManifest(agentHome).assets).sort(), packaged);
-		assert.deepEqual(installSddAssets(agentHome, false), { agents: 0, chains: 0, support: 0, skipped: 30 });
-		assert.deepEqual(installSddAssets(agentHome, true), { agents: 23, chains: 4, support: 3, skipped: 0 });
+		assert.deepEqual(installSddAssets(agentHome, false), { agents: 0, chains: 0, support: 0, skipped: 31 });
+		assert.deepEqual(installSddAssets(agentHome, true), { agents: 24, chains: 4, support: 3, skipped: 0 });
 	});
 });
 
@@ -679,7 +680,7 @@ test("selective refresh preserves unselected ownership and selected user changes
 			writeFileSync(join(agentHome, key), "User-authored instructions\n");
 		}
 		const before = new Map(assetFileKeys(agentHome).map(key => [key, readFileSync(join(agentHome, key), "utf8")]));
-		assert.deepEqual(installPackageAssets(agentHome, true, ["delegation"]), { agents: 2, chains: 0, support: 0, skipped: 1 });
+		assert.deepEqual(installPackageAssets(agentHome, true, ["delegation"]), { agents: 3, chains: 0, support: 0, skipped: 1 });
 		delete manifest.assets[selectedUserKey];
 		assert.deepEqual(installedAssetManifest(agentHome), manifest);
 		for (const [key, content] of before) {

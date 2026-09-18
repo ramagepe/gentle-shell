@@ -14,7 +14,8 @@ test("integrated organic continuity and selected SDD keep separate persistence o
 	assert.match(memory, /do not switch the selected store/);
 	const delegation = read("assets/orchestrator-delegation.md");
 	assert.match(delegation, /organic work, not explicitly selected SDD/);
-	assert.match(delegation, /do not create a specialized agent or invoke `sdd-research`/);
+	assert.match(delegation, /package-owned `gentle-ai-research` role for generic non-SDD external evidence/);
+	assert.match(delegation, /`sdd-research` remains SDD-only/);
 	assert.match(read("assets/agents/sdd-research.md"), /Do not read local artifacts/);
 	assert.match(read("assets/sdd-orchestrator-workflow.md"), /Optional research takes precedence/);
 });

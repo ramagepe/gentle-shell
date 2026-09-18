@@ -28,7 +28,9 @@ Add a package-owned global `gentle-ai-research` agent for generic non-SDD extern
 - T1 RED: `sdd-research-capabilities` fails because generic local reads are stripped; `sdd-preflight` fails because the new asset is absent; `odd-routing-contract` fails because no dedicated route exists; focused `gentle-agents` cases fail because generic launches are not narrowed and SDK local reads are blocked.
 - T2 GREEN: research capabilities 9/9; preflight 33/33; focused launch/child guard cases 5/5; runtime harness passed; package resource check passed (169 files).
 - T3 GREEN: routing 12/12; SDD/ODD integration 2/2; orchestrator budget 38/38; focused package-manifest 5/5; runtime metrics 8/8; typecheck passed; generated runtime check passed; package resource check passed; full `pnpm test` passed with 2720 passing and 38 platform/live skips, followed by provider-contract and runtime-harness success.
-- Residual constraints: the live external-tool integration test remains opt-in and was skipped; no push, PR, release, publication, or active-package installation was performed.
+- Independent verification: PASS for every authorized command and inspected contract; final verdict PARTIAL only because 38 live/provider/platform-specific tests were skipped. No findings at any severity.
+- Native review/assessment: unavailable because the active gentle-pi package-local binary is missing; no lineage was created and no review authority was claimed.
+- Residual constraints: live external-tool execution, producer integration, and Windows-native behavior remain unverified on this host; no push, PR, release, publication, or active-package installation was performed.
 
 ## Acceptance criteria
 

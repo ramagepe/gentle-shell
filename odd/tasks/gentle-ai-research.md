@@ -41,7 +41,7 @@ Add a package-owned global `gentle-ai-research` agent for generic non-SDD extern
 - Direct package-script equivalents passed because `pnpm` was unavailable: typecheck baseline check, generated runtime-module check, 2,720/2,758 tests with 38 platform/live skips, provider-contract check, and runtime harness.
 - Native review: approved and acknowledged for target `sha256:6801801a54953d8673c3463cbf018443728f91f20d426374f6b404dc3077d1f6`; one informational resilience warning noted possible duplicate tool provenance and opened no correction.
 - Live pre-fix reproduction confirmed `gentle-ai-research` had `open-web: blocked; tools=[]`. A live post-fix invocation is unavailable in the current process because its loaded extension and tool schema predate the uninstalled worktree correction; tests cover the corrected launch boundary.
-- Residual constraints: opt-in live research, producer integration, and Windows-native behavior remain unverified on this host; no PR, release, publication, or active-package installation was performed. The correction was committed locally as `93d180da` for branch persistence.
+- Residual constraints: opt-in live research, producer integration, and Windows-native behavior remain unverified on this host; no PR, release, publication, or active-package installation was performed. The correction was committed as `93d180da`; tracking was recorded in `f2e5c6b6`; branch `feat/gentle-ai-research` was pushed to fork `ramagepe/gentle-shell` for persistence.
 
 ## Acceptance criteria
 

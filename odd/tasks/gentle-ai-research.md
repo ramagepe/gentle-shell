@@ -18,9 +18,9 @@ Add a package-owned global `gentle-ai-research` agent for generic non-SDD extern
 - [x] T1. Add RED contract tests for asset installation, exact tool allowlists, generic research selection/guards, continuation behavior, and ODD routing. Commit: `1d5b0bbd`.
 - [x] T2. Implement the delegation-owned agent asset and runtime capability enforcement; make focused runtime tests GREEN. Commit: `2520db3c`.
 - [x] T3. Update ODD routing and public documentation, run focused and full verification, and record residual risks. Commit: `d6fb6233`.
-- [x] T4. Add regression coverage proving a parent can select research tools by semantic name without supplying hidden extension paths. Route: delegated writer; trigger: multi-file TDD correction. RED evidence unavailable because the writer changed implementation before returning a blocked result; regression coverage passes against the correction.
-- [x] T5. Reuse the existing inventory, model-profile, and child guard pipeline while deriving trusted extension provenance inside the host. Route: delegated writer; trigger: multi-file runtime and contract update.
-- [x] T6. Verify focused tests, typecheck, runtime/package checks, and a live `gentle-ai-research` web invocation; record any host-reload limitation. Route: delegated verifier after native high-risk assessment.
+- [x] T4. Add regression coverage proving a parent can select research tools by semantic name without supplying hidden extension paths. Route: delegated writer; trigger: multi-file TDD correction. RED evidence unavailable because the writer changed implementation before returning a blocked result; regression coverage passes against the correction. Commit: `93d180da`.
+- [x] T5. Reuse the existing inventory, model-profile, and child guard pipeline while deriving trusted extension provenance inside the host. Route: delegated writer; trigger: multi-file runtime and contract update. Commit: `93d180da`.
+- [x] T6. Verify focused tests, typecheck, runtime/package checks, and a live `gentle-ai-research` web invocation; record any host-reload limitation. Route: delegated verifier after native high-risk assessment. Commit: `93d180da`.
 
 ## Progress and evidence
 
@@ -41,7 +41,7 @@ Add a package-owned global `gentle-ai-research` agent for generic non-SDD extern
 - Direct package-script equivalents passed because `pnpm` was unavailable: typecheck baseline check, generated runtime-module check, 2,720/2,758 tests with 38 platform/live skips, provider-contract check, and runtime harness.
 - Native review: approved and acknowledged for target `sha256:6801801a54953d8673c3463cbf018443728f91f20d426374f6b404dc3077d1f6`; one informational resilience warning noted possible duplicate tool provenance and opened no correction.
 - Live pre-fix reproduction confirmed `gentle-ai-research` had `open-web: blocked; tools=[]`. A live post-fix invocation is unavailable in the current process because its loaded extension and tool schema predate the uninstalled worktree correction; tests cover the corrected launch boundary.
-- Residual constraints: opt-in live research, producer integration, and Windows-native behavior remain unverified on this host; no push, PR, release, publication, commit, or active-package installation was performed.
+- Residual constraints: opt-in live research, producer integration, and Windows-native behavior remain unverified on this host; no PR, release, publication, or active-package installation was performed. The correction was committed locally as `93d180da` for branch persistence.
 
 ## Acceptance criteria
 

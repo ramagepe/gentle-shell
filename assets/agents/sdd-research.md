@@ -34,7 +34,7 @@ The parent supplies the relevant skill instructions and context before launch. D
 
 Use the injected `## SDD Research Capabilities` and actual callable tools. Documentation uses `fetch_content`; open-web can use the available authorized subset of `web_search`, `source_check`, `fetch_content`, and `get_search_content`. Missing one tool does not deny another authorized route.
 
-The parent's `research_selection` is narrowing intent, never authority. Each selected source class carries exact `tools` and an `extensions` map to each existing `sourceInfo.path`. Only matching active, registered, non-SDK tools can supply `--extension` paths. This does not install extensions or grant trust. Report grants per source class exactly as observed; never copy the child tool union into each class.
+The parent's `research_selection` is narrowing intent, never authority. Each selected source class carries exact semantic `tools` only; the parent never supplies hidden `sourceInfo.path` values. The host derives matching active, registered, non-SDK provenance and transports only those trusted paths through `--extension`. This does not install extensions or grant trust. Report grants per source class exactly as observed; never copy the child tool union into each class.
 
 Recheck child-local availability and extension provenance. Missing, inactive, unselected, restricted, or mismatched tools remain denied. Generic `mcp`, dynamic `mcp__context7`, bash, and persistence tools are not substitute research routes. Do not request extra access merely to satisfy a completeness checklist.
 

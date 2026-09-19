@@ -393,12 +393,11 @@ export async function answerThroughUi(ui: ExtensionContext["ui"] | undefined, as
 const RESEARCH_SELECTION_SCHEMA = {
 	type: "object",
 	additionalProperties: false,
-	description: "Untrusted narrowing intent for package research agents; exact tools and existing sourceInfo.path per tool. Never grants permissions or installs extensions.",
+	description: "Untrusted narrowing intent for package research agents; select source classes and exact semantic tool names only. The host derives trusted extension provenance. Never grants permissions or installs extensions.",
 	properties: Object.fromEntries(["documentation", "open-web"].map(kind => [kind, {
-		type: "object", additionalProperties: false, required: ["tools", "extensions"],
+		type: "object", additionalProperties: false, required: ["tools"],
 		properties: {
 			tools: { type: "array", items: { type: "string" } },
-			extensions: { type: "object", additionalProperties: { type: "string" } },
 		},
 	}])),
 };
@@ -1057,7 +1056,7 @@ export default function gentleAgents(pi: ExtensionAPI, env: NodeJS.ProcessEnv = 
 			sessionDir,
 			resumeSessionPath: resume,
 			env: research ? { ...deps.env, [RESEARCH_AGENT_ENV]: agent.name, [RESEARCH_CHILD_TOOLS_ENV]: JSON.stringify([...research.agent.tools, "subagent_parent_message"]) } : deps.env,
-			...(research ? { researchSelection, extensionPaths: research.extensionPaths } : {}),
+			...(research ? { researchSelection: research.selection, extensionPaths: research.extensionPaths } : {}),
 			...(launchSddChange === undefined ? {} : { sddChange: launchSddChange }),
 			...(parentRepositoryIdentity === undefined ? {} : {
 				authorizeParentStandingReviewPermission: (repositoryIdentity: string) => {

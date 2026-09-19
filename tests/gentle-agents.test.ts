@@ -1230,7 +1230,8 @@ test("research launch transports selected grants and only matching existing exte
 	const fake = fakePi(), runtime = deps(), { ctx } = fakeContext();
 	fake.pi.getActiveTools = () => ["fetch_content", "web_search", "mcp", "bash"];
 	fake.pi.getAllTools = () => fake.pi.getActiveTools().map(name => ({ name, sourceInfo: { source: "extension", path: "/installed/web.ts" } })) as never;
-	const selection = { documentation: { tools: ["fetch_content"], extensions: { fetch_content: "/installed/web.ts" } } };
+	const selection = { documentation: { tools: ["fetch_content"] } };
+	const trustedSelection = { documentation: { tools: ["fetch_content"], extensions: { fetch_content: "/installed/web.ts" } } };
 	let childEnv: NodeJS.ProcessEnv = {};
 	gentleAgents(fake.pi, {}, { ...runtime.deps, home: fixtureHome, spawn: (command, args, options) => {
 		childEnv = options.env!;
@@ -1241,7 +1242,7 @@ test("research launch transports selected grants and only matching existing exte
 	const argv = runtime.spawned[0];
 	assert.equal(argv[argv.indexOf("--tools") + 1], "fetch_content,subagent_parent_message");
 	assert.equal(argv[argv.indexOf("--extension") + 1], "/installed/web.ts");
-	assert.deepEqual(JSON.parse(childEnv.GENTLE_PI_RESEARCH_SELECTION!), selection);
+	assert.deepEqual(JSON.parse(childEnv.GENTLE_PI_RESEARCH_SELECTION!), trustedSelection);
 	assert.equal(fake.tools.get("subagent_continue")!.parameters.properties.research_artifact, undefined);
 	assert.ok(fake.tools.get("subagent_continue")!.parameters.properties.research_selection, "fresh selection must be expressible on continuation");
 	assert.ok(JSON.parse(childEnv.GENTLE_PI_RESEARCH_TOOLS!).includes("subagent_parent_message"));
@@ -1271,14 +1272,14 @@ test("research launch transports selected grants and only matching existing exte
 	await fake.fire("session_shutdown", ctx);
 });
 
-test("generic research launch keeps fixed local reads and requires fresh external selection", async () => {
+test("generic research launch derives trusted paths from semantic selection and requires fresh external selection", async () => {
 	const fixtureHome = join(root, "generic-research-home");
 	mkdirSync(join(fixtureHome, ".pi", "agent", "agents"), { recursive: true });
 	writeFileSync(join(fixtureHome, ".pi", "agent", "agents", "gentle-ai-research.md"), "---\nname: gentle-ai-research\ntools: [read, grep, find, fetch_content, web_search, source_check, get_search_content]\n---\nCollect bounded evidence.");
 	const fake = fakePi(), runtime = deps(), { ctx } = fakeContext();
 	fake.pi.getActiveTools = () => ["read", "grep", "find", "fetch_content", "web_search", "source_check", "get_search_content", "bash", "mcp"];
 	fake.pi.getAllTools = () => fake.pi.getActiveTools().map(name => ({ name, sourceInfo: ["read", "grep", "find"].includes(name) ? { source: "sdk" } : { source: "extension", path: "/installed/web.ts" } })) as never;
-	const selection = { documentation: { tools: ["fetch_content"], extensions: { fetch_content: "/installed/web.ts" } } };
+	const selection = { documentation: { tools: ["fetch_content"] } };
 	let childEnv: NodeJS.ProcessEnv = {};
 	gentleAgents(fake.pi, {}, { ...runtime.deps, home: fixtureHome, spawn: (command, args, options) => {
 		childEnv = options.env!;
@@ -1287,6 +1288,8 @@ test("generic research launch keeps fixed local reads and requires fresh externa
 	const result = await fake.tools.get("subagent_run")!.execute("generic-research", { agent: "gentle-ai-research", task: "Research docs", mode: "background", research_selection: selection }, undefined, undefined, ctx);
 	await tick();
 	assert.equal(runtime.spawned[0][runtime.spawned[0].indexOf("--tools") + 1], "read,grep,find,fetch_content,subagent_parent_message");
+	assert.equal(runtime.spawned[0][runtime.spawned[0].indexOf("--extension") + 1], "/installed/web.ts");
+	assert.deepEqual(JSON.parse(childEnv.GENTLE_PI_RESEARCH_SELECTION!), { documentation: { tools: ["fetch_content"], extensions: { fetch_content: "/installed/web.ts" } } });
 	assert.equal(childEnv.GENTLE_PI_RESEARCH_AGENT, "gentle-ai-research");
 	runtime.children[0].emit({ type: "agent_settled" });
 	await tick();

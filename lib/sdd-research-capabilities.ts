@@ -13,9 +13,11 @@ export const RESEARCH_CHILD_TOOLS_ENV = "GENTLE_PI_RESEARCH_TOOLS";
 export const RESEARCH_SELECTION_ENV = "GENTLE_PI_RESEARCH_SELECTION";
 export interface ResearchGrant {
 	tools: string[];
-	extensions: Record<string, string>;
+	extensions?: Record<string, string>;
 }
 export type ResearchSelection = Partial<Record<keyof ResearchCapabilities, ResearchGrant>>;
+type TrustedResearchGrant = ResearchGrant & { extensions: Record<string, string> };
+type TrustedResearchSelection = Partial<Record<keyof ResearchCapabilities, TrustedResearchGrant>>;
 type Inventory = {
 	getActiveTools?: () => string[];
 	getAllTools?: () => Array<{ name: string; sourceInfo?: { source?: string; path?: string } }>;
@@ -61,32 +63,45 @@ export function renderResearchCapabilities(capabilities: ResearchCapabilities): 
 export function researchAgent(agent: AgentDefinition, pi: Inventory, selection?: unknown) {
 	const capabilities = resolveResearchCapabilities(pi, agent.tools);
 	const extensionPaths = new Set<string>();
+	const trustedSelection: TrustedResearchSelection = {};
 	const requested = selection && typeof selection === "object" && !Array.isArray(selection)
 		? selection as Record<string, unknown> : {};
 	let registered: ReturnType<NonNullable<Inventory["getAllTools"]>> = [];
 	try { registered = pi.getAllTools?.() ?? []; } catch { /* No provenance, no route. */ }
+	const knownClasses = Object.keys(requested).every(key => Object.hasOwn(capabilities, key));
 	for (const [kind, capability] of Object.entries(capabilities)) {
 		const value = requested[kind];
-		const grant = value && typeof value === "object" ? value as Partial<ResearchGrant> : {};
+		const grant = value && typeof value === "object" && !Array.isArray(value) ? value as Partial<ResearchGrant> : {};
 		const supported: readonly string[] = kind === "documentation" ? ["fetch_content"] : RESEARCH_TOOLS;
-		const exact = Object.keys(requested).every(key => Object.hasOwn(capabilities, key)) &&
-			Array.isArray(grant.tools) && grant.tools.length > 0 && new Set(grant.tools).size === grant.tools.length &&
-			grant.tools.every(name => supported.includes(name)) && grant.extensions &&
-			Object.keys(grant.extensions).length === grant.tools.length;
-		capability.tools = exact ? grant.tools!.filter(name => {
-			const path = registered.find(tool => tool.name === name)?.sourceInfo?.path;
-			return capability.tools.includes(name) && typeof path === "string" && isAbsolute(path) && path === grant.extensions![name];
+		const exactTools = knownClasses && Array.isArray(grant.tools) && grant.tools.length > 0 &&
+			new Set(grant.tools).size === grant.tools.length && grant.tools.every(name => typeof name === "string" && supported.includes(name));
+		const suppliedPaths = grant.extensions;
+		const exactPaths = suppliedPaths === undefined || (suppliedPaths !== null && typeof suppliedPaths === "object" &&
+			Object.keys(suppliedPaths).length === grant.tools?.length);
+		const extensions: Record<string, string> = {};
+		capability.tools = exactTools && exactPaths ? grant.tools!.filter(name => {
+			const path = registered.find(tool => tool.name === name && tool.sourceInfo?.source !== "sdk")?.sourceInfo?.path;
+			const matchesSupplied = suppliedPaths === undefined || suppliedPaths[name] === path;
+			if (!capability.tools.includes(name) || typeof path !== "string" || !isAbsolute(path) || !matchesSupplied) return false;
+			extensions[name] = path;
+			return true;
 		}) : [];
 		capability.status = capability.tools.length ? "available" : "blocked";
 		capability.reason = `Only individually selected tools with matching active extension provenance are usable. ${capability.reason}`;
-		for (const name of capability.tools) extensionPaths.add(grant.extensions![name]);
+		if (capability.tools.length) trustedSelection[kind as keyof ResearchCapabilities] = { tools: capability.tools, extensions };
+		for (const name of capability.tools) extensionPaths.add(extensions[name]);
 	}
 	const available = new Set(Object.values(capabilities).filter(value => value.status === "available").flatMap(value => value.tools));
 	const fixedLocal = agent.name === GENERIC_RESEARCH_AGENT
 		? new Set(GENERIC_RESEARCH_LOCAL_TOOLS.filter(name => agent.tools.includes(name)))
 		: new Set<string>();
 	const tools = agent.tools.filter(name => fixedLocal.has(name as typeof GENERIC_RESEARCH_LOCAL_TOOLS[number]) || available.has(name));
-	return { agent: { ...agent, tools, instructions: `${agent.instructions}\n\n${renderResearchCapabilities(capabilities)}` }, capabilities, extensionPaths: [...extensionPaths] };
+	return {
+		agent: { ...agent, tools, instructions: `${agent.instructions}\n\n${renderResearchCapabilities(capabilities)}` },
+		capabilities,
+		extensionPaths: [...extensionPaths],
+		selection: Object.keys(trustedSelection).length ? trustedSelection : undefined,
+	};
 }
 
 // Resolve existing ancestors for real remediation permission checks, including missing leaves.

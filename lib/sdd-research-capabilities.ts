@@ -1,4 +1,4 @@
-import { isAbsolute, resolve, dirname, basename } from "node:path";
+import { isAbsolute, resolve, dirname, basename, sep } from "node:path";
 import { realpathSync, lstatSync } from "node:fs";
 import type { AgentDefinition } from "./agents-config.ts";
 
@@ -102,6 +102,17 @@ export function researchAgent(agent: AgentDefinition, pi: Inventory, selection?:
 		extensionPaths: [...extensionPaths],
 		selection: Object.keys(trustedSelection).length ? trustedSelection : undefined,
 	};
+}
+
+export function researchLocalPathAllowed(cwd: unknown, input: unknown): boolean {
+	try {
+		if (typeof cwd !== "string" || !isAbsolute(cwd) || canonicalArtifactPath(cwd) !== cwd) return false;
+		const path = input && typeof input === "object" ? (input as { path?: unknown }).path : undefined;
+		if (path === undefined) return true;
+		if (typeof path !== "string" || !path) return false;
+		const target = canonicalArtifactPath(resolve(cwd, path));
+		return target === cwd || target.startsWith(`${cwd}${sep}`);
+	} catch { return false; }
 }
 
 // Resolve existing ancestors for real remediation permission checks, including missing leaves.

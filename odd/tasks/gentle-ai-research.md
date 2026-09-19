@@ -21,6 +21,7 @@ Add a package-owned global `gentle-ai-research` agent for generic non-SDD extern
 - [x] T4. Add regression coverage proving a parent can select research tools by semantic name without supplying hidden extension paths. Route: delegated writer; trigger: multi-file TDD correction. RED evidence unavailable because the writer changed implementation before returning a blocked result; regression coverage passes against the correction. Commit: `93d180da`.
 - [x] T5. Reuse the existing inventory, model-profile, and child guard pipeline while deriving trusted extension provenance inside the host. Route: delegated writer; trigger: multi-file runtime and contract update. Commit: `93d180da`.
 - [x] T6. Verify focused tests, typecheck, runtime/package checks, and a live `gentle-ai-research` web invocation; record any host-reload limitation. Route: delegated verifier after native high-risk assessment. Commit: `93d180da`.
+- [x] T7. Enforce repository confinement for generic research `read`, `grep`, and `find` calls, with traversal and absolute-path regression coverage. Route: delegated writer; trigger: multi-file native-review correction. Correction used 34 of 80 authorized diff lines; commit recorded in the progress evidence below.
 
 ## Progress and evidence
 
@@ -39,9 +40,10 @@ Add a package-owned global `gentle-ai-research` agent for generic non-SDD extern
 - Delivery strategy: `ask-on-risk`; the correction added 52 and removed 24 lines across eight files, including this progress document.
 - Focused verification: 110 passed, 0 failed, 0 skipped. Package-file verification: 169 package files and 69 byte-pinned artifacts passed.
 - Direct package-script equivalents passed because `pnpm` was unavailable: typecheck baseline check, generated runtime-module check, 2,720/2,758 tests with 38 platform/live skips, provider-contract check, and runtime harness.
-- Native review: approved and acknowledged for final implementation target `sha256:266beabee8d3f78fd4c1697c6d40c9a0dbab8fc541aa67dc64a4c899f82e674d`; later documentation-only persistence updates did not change runtime behavior.
+- Native review of the committed branch found one deterministic critical boundary gap: generic research local reads were admitted by tool name without validating that requested paths stay inside the child repository. Lineage `review-a5a9dd7c552c30b2` authorized one bounded correction of up to 80 diff lines.
 - Live pre-fix reproduction confirmed `gentle-ai-research` had `open-web: blocked; tools=[]`. A live post-fix invocation is unavailable in the current process because its loaded extension and tool schema predate the uninstalled worktree correction; tests cover the corrected launch boundary.
-- Residual constraints: opt-in live research, producer integration, and Windows-native behavior remain unverified on this host; no PR, release, publication, or active-package installation was performed. The correction was committed as `93d180da`; tracking was recorded in `f2e5c6b6`; branch `feat/gentle-ai-research` was pushed to fork `ramagepe/gentle-shell` for persistence.
+- T7 RED: the focused suite had 100 passing and 1 failing because `read` admitted `../generic-research-outside`. T7 GREEN: 101/101 focused tests passed; typecheck had no regressions; parent spot check also passed 101/101.
+- Residual constraints: opt-in live research, producer integration, and Windows-native behavior remain unverified on this host; Windows junction coverage is conditional and did not execute here. No PR, release, publication, or active-package installation was performed. The original correction was committed as `93d180da`; branch `feat/gentle-ai-research` is persisted on fork `ramagepe/gentle-shell`.
 
 ## Acceptance criteria
 

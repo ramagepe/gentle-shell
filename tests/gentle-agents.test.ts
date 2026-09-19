@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { homedir, tmpdir } from "node:os";
 import { createRequire, syncBuiltinESMExports } from "node:module";
@@ -1301,13 +1301,18 @@ test("generic research launch derives trusted paths from semantic selection and 
 	await fake.fire("session_shutdown", ctx);
 });
 
-test("generic research child permits only fixed local reads without provenance", () => {
-	const hooks = new Map<string, (event: any) => any>();
+test("generic research child confines fixed local reads to its repository", () => {
+	const hooks = new Map<string, (event: any, context?: any) => any>();
 	const active = ["read", "grep", "find", "fetch_content", "write", "bash", "mcp", "subagent_parent_message"];
 	const pi = { on: (name: string, handler: (event: any) => any) => hooks.set(name, handler), getActiveTools: () => active, getAllTools: () => active.map(name => ({ name, sourceInfo: ["read", "grep", "find", "write"].includes(name) ? { source: "sdk" } : { source: "extension", path: "/installed/web.ts" } })) } as never;
 	gentleAgents(pi, { GENTLE_PI_AGENTS_CHILD: "1", GENTLE_PI_RESEARCH_AGENT: "gentle-ai-research", GENTLE_PI_RESEARCH_TOOLS: JSON.stringify(["read", "grep", "find", "fetch_content", "subagent_parent_message"]), GENTLE_PI_RESEARCH_SELECTION: JSON.stringify({ documentation: { tools: ["fetch_content"], extensions: { fetch_content: "/installed/web.ts" } } }) });
-	const call = hooks.get("tool_call")!;
-	for (const toolName of ["read", "grep", "find", "fetch_content", "subagent_parent_message"]) assert.equal(call({ toolName })?.block, undefined, toolName);
+	const repo = join(root, "generic-research-repo"), outside = join(root, "generic-research-outside");
+	mkdirSync(repo); mkdirSync(outside); writeFileSync(join(repo, "inside.txt"), "ok");
+	symlinkSync(outside, join(repo, "escape"), process.platform === "win32" ? "junction" : "dir");
+	const call = hooks.get("tool_call")!, context = { cwd: repo };
+	for (const [toolName, input] of [["read", { path: "inside.txt" }], ["grep", { path: "." }], ["find", {}]] as const) assert.equal(call({ toolName, input }, context)?.block, undefined, toolName);
+	for (const toolName of ["read", "grep", "find"]) for (const path of ["../generic-research-outside", outside, "escape"]) assert.equal(call({ toolName, input: { path } }, context)?.block, true, `${toolName}: ${path}`);
+	for (const toolName of ["fetch_content", "subagent_parent_message"]) assert.equal(call({ toolName })?.block, undefined, toolName);
 	for (const toolName of ["write", "bash", "mcp"]) assert.equal(call({ toolName })?.block, true, toolName);
 	assert.match(hooks.get("before_agent_start")!({ systemPrompt: "research" }).systemPrompt, /read local repository evidence/);
 });

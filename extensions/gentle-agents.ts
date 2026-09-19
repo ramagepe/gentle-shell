@@ -33,7 +33,7 @@ import { CARD_TONE, renderCard } from "../lib/shell-card.ts";
 import { openInExternalEditor } from "./gentle-shell.ts";
 import { resolveGentlePiAgentHome, gentlePiConfigHome } from "../lib/agent-home.ts";
 import { resolveProfilePin } from "../lib/agent-profile-pin.ts";
-import { canonicalArtifactPath, GENERIC_RESEARCH_AGENT, GENERIC_RESEARCH_LOCAL_TOOLS, researchAgent, renderResearchCapabilities, RESEARCH_AGENT_ENV, RESEARCH_CHILD_TOOLS_ENV, RESEARCH_SELECTION_ENV } from "../lib/sdd-research-capabilities.ts";
+import { canonicalArtifactPath, GENERIC_RESEARCH_AGENT, GENERIC_RESEARCH_LOCAL_TOOLS, researchAgent, researchLocalPathAllowed, renderResearchCapabilities, RESEARCH_AGENT_ENV, RESEARCH_CHILD_TOOLS_ENV, RESEARCH_SELECTION_ENV } from "../lib/sdd-research-capabilities.ts";
 import { CHILD_METRICS_EVENT, CHILD_METRICS_REVOKED, childEvent, launchSelection, type LaunchSelection } from "../lib/runtime-metrics-children.ts";
 import { runtimeMetricsEnvAllows, type RuntimeMetricsPolicyDeps } from "../lib/runtime-metrics-policy.ts";
 
@@ -419,8 +419,8 @@ export default function gentleAgents(pi: ExtensionAPI, env: NodeJS.ProcessEnv = 
 				? "Research is read-only. You may read local repository evidence with read, grep, and find, but never mutate repository or Engram artifacts."
 				: "Research is output-only. Use parent-supplied local context; do not read or mutate repository or Engram artifacts."} Return useful partial findings and unavailable sources honestly. The parent owns authorized persistence and actual readback.`,
 		}));
-		pi.on("tool_call", event => {
-			const localRead = generic && GENERIC_RESEARCH_LOCAL_TOOLS.includes(event.toolName as typeof GENERIC_RESEARCH_LOCAL_TOOLS[number]);
+		pi.on("tool_call", (event, context) => {
+			const localRead = generic && GENERIC_RESEARCH_LOCAL_TOOLS.includes(event.toolName as typeof GENERIC_RESEARCH_LOCAL_TOOLS[number]) && researchLocalPathAllowed(context?.cwd, event.input);
 			const registeredExternal = pi.getAllTools().some(tool => tool.name === event.toolName && tool.sourceInfo?.source !== "sdk");
 			const selected = current().agent.tools.includes(event.toolName) || event.toolName === "subagent_parent_message";
 			if ((!localRead && !registeredExternal) || !selected || !allowed.includes(event.toolName) || !pi.getActiveTools().includes(event.toolName)) {
